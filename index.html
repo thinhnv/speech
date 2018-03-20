@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html lang="en" dir="ltr" xmlns:fb="http://ogp.me/ns/fb#">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+	<title>Speech</title>
+
+	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+
+    <link rel="https://cdnjs.cloudflare.com/ajax/libs/jquery-mosaic/0.131/jquery.mosaic.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mosaic/0.131/jquery.mosaic.js"></script>
+
+    <script>
+        $(document).init(function () {
+            //$('.voiceInput').jMosaic();
+
+
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Unable to use the Speech Recognition API");
+            }
+
+            // Or
+
+            if (!window.hasOwnProperty("webkitSpeechRecognition")) {
+                alert("Unable to use the Speech Recognition API");
+            }
+
+            // Or
+
+            if(typeof(webkitSpeechRecognition) != "function"){
+                alert("Unable to use the Speech Recognition API");
+            }
+
+            // Create a new instance of SpeechRecognition
+            var recognition = new webkitSpeechRecognition();
+
+            // Define whether continuous results are returned for each recognition
+            // or only a single result. Defaults to false
+            recognition.continuous = true;
+
+            // Controls whether interim results should be returned 
+            // Interim results are results that are not yet final 
+            // (e.g. the SpeechRecognitionResult.isFinal property is false.)
+
+            //recognition.interimResults = true;
+            recognition.interimResults = false;
+
+
+            // Returns and sets the language of the current SpeechRecognition. 
+            // If not specified, this defaults to the HTML lang attribute value
+            // or the user agent's language setting if that isn't set either.
+            // There are a lot of supported languages (go to supported languages at the end of the article)
+            //recognition.lang = "en-US";
+            recognition.lang = "vi-VN";
+
+            //thịnh
+            recognition.maxAlternatives = 1; //Since from our experience, the highest result is really the best...
+
+            // Fired when an error happens with the speech recognition
+            // With all the following erro codes:
+            // info-blocked
+            // info-denied
+            // no-speech
+            // aborted
+            // audio-capture
+            // network
+            // not-allowed
+            // service-not-allowed
+            // bad-grammar
+            // language-not-supported
+            // recognition_overlap 
+
+            recognition.onerror = function(event) {
+                console.error(event);
+                recognition.stop(); //thịnh
+            };
+
+            //để khắc phục mỗi lần ngưng đọc khoảng hơn 5s, recognition sẽ ngưng chạy và báo lỗi "no-speech":
+            //very good
+            recognition.onend = function () {
+                recognition.start();
+            }
+
+            // will run when the speech recognition 
+            // service has began listening to incoming audio 
+            recognition.onstart = function() {
+                console.log('Speech recognition service has started');
+            };
+
+            recognition.onresult = function(event) {
+                var interim_transcript = '';
+                var final_transcript = '';
+
+                for (var i = event.resultIndex; i < event.results.length; ++i) {
+                    // Verify if the recognized text is the last with the isFinal property
+                    if (event.results[i].isFinal) {
+                        final_transcript += event.results[i][0].transcript;
+                    } else {
+                        interim_transcript += event.results[i][0].transcript;
+                    }
+                }
+
+                // Choose which result may be useful for you
+
+                $('#txtTranscript').val(final_transcript);
+
+                console.log("Interim: ", interim_transcript);
+                console.log("Final: ",final_transcript);
+                console.log("Simple: ", event.results[0][0].transcript);
+            };
+
+            
+
+            $('#btnStart').on('click', function(){
+                recognition.start();
+            })
+
+            $('#imgMic').on('click', function () {
+                var src = $(this).attr('src');
+                var newsrc = (src=='images/mic.jpg') ? 'images/mic_on.png' : 'images/mic.jpg';
+                $(this).attr('src', newsrc);
+
+                switch (newsrc) {
+                    case 'images/mic_on.png':
+                        recognition.stop();
+                        recognition.start();
+                        break;
+                    case 'images/mic.jpg.png':
+                        recognition.stop();
+                        break;
+                }
+            })
+        })
+        
+    </script>
+</head>
+<body>
+    <div class="voiceInput">
+        <input type="text" id="txtTranscript" placeholder="Speak" style="height: 3em;" />
+        <img id="imgMic" src="images/mic.jpg" style="width: 1.7em; position:relative; top: 0.3em; left: -35px;"/>
+        <!--<img id="imgMic2" src="images/mic_on.png" style="width: 1.7em; position:relative; top: 0.3em; left: -45px;"/>-->
+    </div>
+    <p>
+        <input type="button" id="btnStart" value="START"/>
+    </p>
+    
+</body>
+</html>
